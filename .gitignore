@@ -7,6 +7,7 @@ build/
 
 # Deno lock file
 deno.lock
+.deno_dir/
 
 # Editor directories and files
 .vscode/
