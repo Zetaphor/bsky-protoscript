@@ -2,13 +2,7 @@ import axiod from "https://deno.land/x/axiod/mod.ts";
 import { minify } from 'npm:minify';
 import { serve } from "https://deno.land/std@0.178.0/http/server.ts";
 import { contentType } from "https://deno.land/std@0.178.0/media_types/mod.ts";
-
-// ATProto API endpoints
-const BASE_URL = "https://bsky.social/xrpc";
-const LOGIN_URL = `${BASE_URL}/com.atproto.server.createSession`;
-const CREATE_RECORD_URL = `${BASE_URL}/com.atproto.repo.createRecord`;
-const RESOLVE_HANDLE_URL = `${BASE_URL}/com.atproto.identity.resolveHandle`;
-const LIST_RECORDS_URL = `${BASE_URL}/com.atproto.repo.listRecords`;
+import { DidResolver, HandleResolver } from "npm:@atproto/identity";
 
 // Custom lexicon for JavaScript file storage
 const customLexicon = {
@@ -46,8 +40,32 @@ interface Session {
   did: string;
 }
 
+async function getServiceEndpoint(handle: string): Promise<string> {
+  const hdlres = new HandleResolver();
+  const didres = new DidResolver({});
+
+  const did = await hdlres.resolve(handle);
+  if (!did) {
+    throw new Error(`Could not resolve handle: ${handle}`);
+  }
+
+  const doc = await didres.resolve(did);
+  if (!doc) {
+    throw new Error(`Could not resolve DID document for: ${did}`);
+  }
+
+  const serviceEndpoint = doc.service?.find(s => s.type === "AtprotoPersonalDataServer")?.serviceEndpoint;
+  if (!serviceEndpoint) {
+    throw new Error(`Service endpoint not found for handle: ${handle}`);
+  }
+
+  return serviceEndpoint as string;
+}
+
 async function login(username: string, password: string): Promise<Session> {
   try {
+    const serviceEndpoint = await getServiceEndpoint(username);
+    const LOGIN_URL = `${serviceEndpoint}/xrpc/com.atproto.server.createSession`;
     const response = await axiod.post(LOGIN_URL, { identifier: username, password });
     return response.data;
   } catch (error) {
@@ -59,6 +77,9 @@ async function login(username: string, password: string): Promise<Session> {
 }
 
 async function publishJavaScriptFile(session: Session, filename: string, content: string, description?: string) {
+  const serviceEndpoint = await getServiceEndpoint(session.did);
+  const CREATE_RECORD_URL = `${serviceEndpoint}/xrpc/com.atproto.repo.createRecord`;
+
   const headers = {
     Authorization: `Bearer ${session.accessJwt}`,
     'Content-Type': 'application/json'
@@ -98,6 +119,9 @@ async function publishJavaScriptFile(session: Session, filename: string, content
 
 async function resolveHandle(handle: string): Promise<string> {
   try {
+    const serviceEndpoint = await getServiceEndpoint(handle);
+    const RESOLVE_HANDLE_URL = `${serviceEndpoint}/xrpc/com.atproto.identity.resolveHandle`;
+
     const response = await axiod.get(RESOLVE_HANDLE_URL, {
       params: { handle }
     });
@@ -112,7 +136,15 @@ async function resolveHandle(handle: string): Promise<string> {
 
 async function getRecordsForUser(username: string) {
   try {
-    const did = await resolveHandle(username);
+    const serviceEndpoint = await getServiceEndpoint(username);
+    const LIST_RECORDS_URL = `${serviceEndpoint}/xrpc/com.atproto.repo.listRecords`;
+
+    const hdlres = new HandleResolver();
+    const did = await hdlres.resolve(username);
+    if (!did) {
+      throw new Error(`Could not resolve handle: ${username}`);
+    }
+
     const response = await axiod.get(LIST_RECORDS_URL, {
       params: {
         repo: did,
