@@ -161,7 +161,14 @@ async function getRecordsForUser(username: string) {
   }
 }
 
+function logError(message: string, error: unknown) {
+  const timestamp = format(new Date(), "yyyy-MM-dd HH:mm:ss");
+  const errorMessage = error instanceof Error ? error.stack || error.message : String(error);
+  console.error(`[${timestamp}] ${message}\n`, errorMessage);
+}
+
 async function handleRequest(request: Request): Promise<Response> {
+  try {
   const url = new URL(request.url);
 
   // Serve static files
@@ -174,32 +181,38 @@ async function handleRequest(request: Request): Promise<Response> {
         headers: { "Content-Type": mimeType || 'application/octet-stream' },
       });
     } catch (error) {
-      console.error(`Error serving static file: ${error}`);
+        logError(`Error serving static file: ${url.pathname}`, error);
       return new Response("Not Found", { status: 404 });
     }
   }
 
   if (url.pathname === "/" && request.method === "GET") {
+      try {
     const html = await Deno.readTextFile("index.html");
     return new Response(html, {
       headers: { "Content-Type": "text/html" },
     });
+      } catch (error) {
+        logError("Error reading index.html", error);
+        return new Response("Internal Server Error", { status: 500 });
+      }
   }
 
   if (url.pathname === "/publish" && request.method === "POST") {
+      try {
     const { username, password, filename, content, description } = await request.json();
 
     if (!username || !password) {
       return new Response("Username and password are required", { status: 400 });
     }
 
-    try {
       const session = await login(username, password);
       const result = await publishJavaScriptFile(session, filename, content, description);
       return new Response(JSON.stringify(result), {
         headers: { "Content-Type": "application/json" },
       });
     } catch (error) {
+        logError("Error in /publish endpoint", error);
       if (error instanceof Error) {
         return new Response(`Error: ${error.message}`, { status: 500 });
       }
@@ -208,17 +221,18 @@ async function handleRequest(request: Request): Promise<Response> {
   }
 
   if (url.pathname === "/getRecords" && request.method === "GET") {
+      try {
     const username = url.searchParams.get("username");
     if (!username) {
       return new Response("Username is required", { status: 400 });
     }
 
-    try {
       const records = await getRecordsForUser(username);
       return new Response(JSON.stringify(records), {
         headers: { "Content-Type": "application/json" },
       });
     } catch (error) {
+        logError("Error in /getRecords endpoint", error);
       if (error instanceof Error) {
         return new Response(`Error: ${error.message}`, { status: 500 });
       }
@@ -227,6 +241,10 @@ async function handleRequest(request: Request): Promise<Response> {
   }
 
   return new Response("Not Found", { status: 404 });
+  } catch (error) {
+    logError("Unhandled error in handleRequest", error);
+    return new Response("Internal Server Error", { status: 500 });
+  }
 }
 
 const PORT = 8080;
