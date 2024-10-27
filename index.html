@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProtoScript</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.30.1/min/vs/loader.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"
+    integrity="sha512-aNMyYYxdIxIaot0Y1/PLuEu3eipGCmsEUBrUq+7aVyPGMFH8z0eTP0tkqAvv34fzN6z+201d3T8HPb1svWSKHQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'media',
+      theme: {
+        extend: {
+          colors: {
+            'green': {
+              900: '#064e3b',
+              500: '#10b981',
+            },
+          },
+        },
+      },
+    }
+  </script>
+</head>
+
+<body class="bg-gray-200 dark:bg-gray-800 min-h-screen text-gray-800 dark:text-gray-200">
+  <a href="#main-content"
+    class="sr-only focus:not-sr-only focus:absolute focus:p-2 focus:bg-blue-500 focus:text-white">Skip to main
+    content</a>
+
+  <div class="container mx-auto px-4 py-8">
+    <header>
+      <h1 class="text-3xl font-bold mb-8 text-center text-gray-900 dark:text-gray-100">ProtoScript</h1>
+    </header>
+
+    <main id="main-content">
+      <div class="bg-white dark:bg-gray-700 shadow-md rounded-lg overflow-hidden" role="tablist">
+        <div class="flex border-b border-gray-300 dark:border-gray-600">
+          <button
+            class="tablinks flex-1 py-3 px-4 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 active bg-gray-100 dark:bg-gray-600 font-semibold"
+            onclick="_openTab(event, 'About')" role="tab" aria-controls="About" aria-selected="true">About</button>
+          <button
+            class="tablinks flex-1 py-3 px-4 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700"
+            onclick="_openTab(event, 'GetRecords')" role="tab" aria-controls="GetRecords" aria-selected="false">View
+            Scripts</button>
+          <button
+            class="tablinks flex-1 py-3 px-4 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700"
+            onclick="_openTab(event, 'PublishFile')" role="tab" aria-controls="PublishFile"
+            aria-selected="false">Publish Script</button>
+        </div>
+
+        <div id="About" class="tabcontent p-6" role="tabpanel" aria-labelledby="about-tab">
+          <h2 class="text-xl font-semibold mt-4 mb-2">What is this?</h2>
+          <p class="mb-4">
+            ProtoScript is a platform that lets you publish Javascript code to your ATProto Personal Data Server (PDS).
+            <br>
+            You can then view and execute the code from any user account directly in your browser.
+          </p>
+          <h2 class="text-xl font-semibold mt-4 mb-2">Why?</h2>
+          <p class="mb-4">
+            I thought it would be neat. It doesn't have a real purpose but it was fun to build.
+          </p>
+          <h2 class="text-xl font-semibold mt-4 mb-2">Isn't this insecure?</h2>
+          <p class="mb-4">
+            No more than running JS from any other random website, the browser has pretty good sandboxing.
+            <br>
+            <strong>However,</strong> you should make sure you don't have your app password in the publish tab, as an
+            executed script will be able to see it.
+          </p>
+          <h2 class="text-xl font-semibold mt-4 mb-2">How do I use it?</h2>
+          <h3 class="font-semibold mb-2">View scripts</h3>
+          <p>
+            Click the "View Scripts" tab. Enter a username. Click Get Scripts.
+          </p>
+          <h3 class="font-semibold mb-2 mt-4">Publish a script</h3>
+          <p>
+            Click the "Publish Script" tab. Enter your ATProto username and <a
+              href="https://bsky.app/settings/app-passwords"
+              class="underline focus:outline-none focus:ring-2 focus:ring-blue-500">app password</a>.
+            <br>
+            Enter a filename and description. (description is optional)
+            <br>
+            Write your code. Click Publish.
+          </p>
+          <h2 class="text-xl font-semibold mt-4 mb-2">How do I delete my scripts?</h2>
+          <p class="mb-4">
+            Use <a href="https://repocleaner.cleanfollow-bsky.pages.dev/"
+              class="underline focus:outline-none focus:ring-2 focus:ring-blue-500">the RepoCleaner</a> to remove the
+            records. I
+            considered adding delete functionality to this UI but this is a toy project and that would add a lot of
+            complexity.
+          </p>
+
+          <h2 class="font-semibold mb-4 underline"><a href="https://bsky.app/zetaphor.com"
+              class="focus:outline-none focus:ring-2 focus:ring-blue-500">Made by
+              @Zetaphor.com</a></h2>
+          <h2 class="font-semibold mb-4 underline"><a href="https://github.com/Zetaphor/bsky-protoscript"
+              class="focus:outline-none focus:ring-2 focus:ring-blue-500">Github Repo</a></h2>
+        </div>
+
+        <div id="GetRecords" class="tabcontent p-6" style="display: none;" role="tabpanel"
+          aria-labelledby="get-records-tab">
+          <h2 class="text-xl font-semibold mb-4">Get Users Scripts</h2>
+          <p class="mb-4">Enter a user handle to view their scripts.</p>
+          <div class="flex space-x-4 mb-4">
+            <label for="getRecordsUsername" class="sr-only">User Handle</label>
+            <input type="text" id="getRecordsUsername" placeholder="ex: zetaphor.com"
+              class="flex-grow px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
+            <button id="getRecordsButton"
+              class="px-4 py-2 bg-green-900 text-white rounded-md hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:bg-green-900 dark:hover:bg-green-500">Get
+              Scripts</button>
+          </div>
+          <div id="recordsList" class="mt-4" aria-live="polite"></div>
+          <div id="codeExecutionResult" class="mt-4 p-4 bg-gray-100 dark:bg-gray-600 rounded-md" aria-live="polite">
+          </div>
+        </div>
+
+        <div id="PublishFile" class="tabcontent p-6" style="display: none;" role="tabpanel"
+          aria-labelledby="publish-file-tab">
+          <h2 class="text-xl font-semibold mb-4">Publish JavaScript File</h2>
+          <form id="publish-form">
+            <label for="username" class="sr-only">User Handle</label>
+            <input type="text" id="username" placeholder="User handle"
+              class="w-full px-3 py-2 mb-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
+            <label for="password" class="sr-only">App Password</label>
+            <input type="password" id="password" placeholder="App Password"
+              class="w-full px-3 py-2 mb-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
+            <label for="filename" class="sr-only">Filename</label>
+            <input type="text" id="filename" placeholder="Filename (e.g., example.js)"
+              class="w-full px-3 py-2 mb-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
+            <label for="description" class="sr-only">Description</label>
+            <input type="text" id="description" placeholder="Description (optional)"
+              class="w-full px-3 py-2 mb-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
+            <div id="editor-container" class="w-full h-[400px] border border-gray-300 dark:border-gray-600"
+              aria-label="Code editor"></div>
+            <button type="submit" id="submit"
+              class="w-full px-4 py-2 mt-2 bg-green-700 text-white rounded-md hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">Publish</button>
+          </form>
+          <div id="result" class="mt-4 p-4 bg-gray-100 dark:bg-gray-600 rounded-md" aria-live="polite"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>

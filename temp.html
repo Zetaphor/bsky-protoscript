@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      text-align: center;
+      margin: 0;
+    }
+
+    .tiles {
+      height: 100vh;
+      height: calc(var(--vh, 1vh) * 100);
+      margin: 0 auto;
+    }
+
+    .tile {
+      float: left;
+      width: 50%;
+      height: 50%;
+      box-sizing: border-box;
+      font-size: 400px;
+      font-weight: bold;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+      font-family: serif;
+    }
+
+    .fliph {
+      transform: scaleX(-1);
+      /* Standard */
+    }
+
+    .flipv {
+      transform: scaleY(-1);
+      /* Standard */
+    }
+
+    .flipv2 {
+      transform: scaleY(-1);
+      /* Standard */
+      transform: rotate(180deg);
+      /* IE 6/7/8 */
+    }
+
+    .fliphv {
+      transform: rotate(90deg);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="tiles">
+    <div class="tile">
+      <div class="animation">
+        Nice!
+      </div>
+    </div>
+    <div class="tile fliph">
+      <div class="animation">
+        Nice!
+      </div>
+    </div>
+    <div class="tile flipv">
+      <div class="animation">
+        Nice!
+      </div>
+    </div>
+    <div class="tile fliph flipv2">
+      <div class="animation">
+        Nice!
+      </div>
+    </div>
+  </div>
+  <script src="https://button.zetaphor.com/static/anime.min.js"></script>
+  <script>
+    var elements = document.querySelectorAll(".animation");
+
+    anime({
+      targets: ".animation",
+      rotate: "1turn",
+      easing: "linear",
+      loop: true,
+      duration: 3000
+    });
+  </script>
+</body>
+
+</html>

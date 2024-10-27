@@ -1,0 +1,15 @@
+# Node modules (if you're using npm)
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Deno lock file
+deno.lock
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
