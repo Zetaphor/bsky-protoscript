@@ -3,6 +3,7 @@ import { minify } from 'npm:minify';
 import { serve } from "https://deno.land/std@0.178.0/http/server.ts";
 import { contentType } from "https://deno.land/std@0.178.0/media_types/mod.ts";
 import { DidResolver, HandleResolver } from "npm:@atproto/identity";
+import { format } from "https://deno.land/std@0.178.0/datetime/mod.ts";
 
 // Custom lexicon for JavaScript file storage
 const customLexicon = {
@@ -38,6 +39,7 @@ const customLexicon = {
 interface Session {
   accessJwt: string;
   did: string;
+  serviceEndpoint: string;
 }
 
 async function getServiceEndpoint(handle: string): Promise<string> {
@@ -67,6 +69,7 @@ async function login(username: string, password: string): Promise<Session> {
     const serviceEndpoint = await getServiceEndpoint(username);
     const LOGIN_URL = `${serviceEndpoint}/xrpc/com.atproto.server.createSession`;
     const response = await axiod.post(LOGIN_URL, { identifier: username, password });
+    response.data.serviceEndpoint = serviceEndpoint;
     return response.data;
   } catch (error) {
     if (error instanceof Error) {
@@ -77,7 +80,7 @@ async function login(username: string, password: string): Promise<Session> {
 }
 
 async function publishJavaScriptFile(session: Session, filename: string, content: string, description?: string) {
-  const serviceEndpoint = await getServiceEndpoint(session.did);
+  const serviceEndpoint = session.serviceEndpoint;
   const CREATE_RECORD_URL = `${serviceEndpoint}/xrpc/com.atproto.repo.createRecord`;
 
   const headers = {
@@ -169,78 +172,78 @@ function logError(message: string, error: unknown) {
 
 async function handleRequest(request: Request): Promise<Response> {
   try {
-  const url = new URL(request.url);
+    const url = new URL(request.url);
 
-  // Serve static files
-  if (url.pathname === "/styles.css" || url.pathname === "/script.js" || url.pathname === "/rick.mp3") {
-    try {
-      const file = await Deno.readFile(`.${url.pathname}`);
-      const fileExtension = url.pathname.split('.').pop();
-      const mimeType = contentType(fileExtension || '');
-      return new Response(file, {
-        headers: { "Content-Type": mimeType || 'application/octet-stream' },
-      });
-    } catch (error) {
-        logError(`Error serving static file: ${url.pathname}`, error);
-      return new Response("Not Found", { status: 404 });
-    }
-  }
-
-  if (url.pathname === "/" && request.method === "GET") {
+    // Serve static files
+    if (url.pathname === "/styles.css" || url.pathname === "/script.js" || url.pathname === "/rick.mp3") {
       try {
-    const html = await Deno.readTextFile("index.html");
-    return new Response(html, {
-      headers: { "Content-Type": "text/html" },
-    });
+        const file = await Deno.readFile(`.${url.pathname}`);
+        const fileExtension = url.pathname.split('.').pop();
+        const mimeType = contentType(fileExtension || '');
+        return new Response(file, {
+          headers: { "Content-Type": mimeType || 'application/octet-stream' },
+        });
+      } catch (error) {
+        logError(`Error serving static file: ${url.pathname}`, error);
+        return new Response("Not Found", { status: 404 });
+      }
+    }
+
+    if (url.pathname === "/" && request.method === "GET") {
+      try {
+        const html = await Deno.readTextFile("index.html");
+        return new Response(html, {
+          headers: { "Content-Type": "text/html" },
+        });
       } catch (error) {
         logError("Error reading index.html", error);
         return new Response("Internal Server Error", { status: 500 });
       }
-  }
-
-  if (url.pathname === "/publish" && request.method === "POST") {
-      try {
-    const { username, password, filename, content, description } = await request.json();
-
-    if (!username || !password) {
-      return new Response("Username and password are required", { status: 400 });
     }
 
-      const session = await login(username, password);
-      const result = await publishJavaScriptFile(session, filename, content, description);
-      return new Response(JSON.stringify(result), {
-        headers: { "Content-Type": "application/json" },
-      });
-    } catch (error) {
+    if (url.pathname === "/publish" && request.method === "POST") {
+      try {
+        const { username, password, filename, content, description } = await request.json();
+
+        if (!username || !password) {
+          return new Response("Username and password are required", { status: 400 });
+        }
+
+        const session = await login(username, password);
+        const result = await publishJavaScriptFile(session, filename, content, description);
+        return new Response(JSON.stringify(result), {
+          headers: { "Content-Type": "application/json" },
+        });
+      } catch (error) {
         logError("Error in /publish endpoint", error);
-      if (error instanceof Error) {
-        return new Response(`Error: ${error.message}`, { status: 500 });
+        if (error instanceof Error) {
+          return new Response(`Error: ${error.message}`, { status: 500 });
+        }
+        return new Response("An unknown error occurred", { status: 500 });
       }
-      return new Response("An unknown error occurred", { status: 500 });
     }
-  }
 
-  if (url.pathname === "/getRecords" && request.method === "GET") {
+    if (url.pathname === "/getRecords" && request.method === "GET") {
       try {
-    const username = url.searchParams.get("username");
-    if (!username) {
-      return new Response("Username is required", { status: 400 });
-    }
+        const username = url.searchParams.get("username");
+        if (!username) {
+          return new Response("Username is required", { status: 400 });
+        }
 
-      const records = await getRecordsForUser(username);
-      return new Response(JSON.stringify(records), {
-        headers: { "Content-Type": "application/json" },
-      });
-    } catch (error) {
+        const records = await getRecordsForUser(username);
+        return new Response(JSON.stringify(records), {
+          headers: { "Content-Type": "application/json" },
+        });
+      } catch (error) {
         logError("Error in /getRecords endpoint", error);
-      if (error instanceof Error) {
-        return new Response(`Error: ${error.message}`, { status: 500 });
+        if (error instanceof Error) {
+          return new Response(`Error: ${error.message}`, { status: 500 });
+        }
+        return new Response("An unknown error occurred", { status: 500 });
       }
-      return new Response("An unknown error occurred", { status: 500 });
     }
-  }
 
-  return new Response("Not Found", { status: 404 });
+    return new Response("Not Found", { status: 404 });
   } catch (error) {
     logError("Unhandled error in handleRequest", error);
     return new Response("Internal Server Error", { status: 500 });
