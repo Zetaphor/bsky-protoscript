@@ -197,5 +197,8 @@ async function handleRequest(request: Request): Promise<Response> {
   return new Response("Not Found", { status: 404 });
 }
 
-console.log("Server running on http://localhost:8000");
-await serve(handleRequest, { port: 8000 });
+const PORT = 8080;
+const HOSTNAME = "0.0.0.0";
+
+console.log(`Server running on http://${HOSTNAME}:${PORT}`);
+await serve(handleRequest, { port: PORT, hostname: HOSTNAME });
