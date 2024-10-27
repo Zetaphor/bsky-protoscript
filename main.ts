@@ -4,7 +4,7 @@ import { serve } from "https://deno.land/std@0.178.0/http/server.ts";
 import { contentType } from "https://deno.land/std@0.178.0/media_types/mod.ts";
 
 // ATProto API endpoints
-const BASE_URL = "https://pds.zetaphor.com/xrpc";
+const BASE_URL = "https://bsky.social/xrpc";
 const LOGIN_URL = `${BASE_URL}/com.atproto.server.createSession`;
 const CREATE_RECORD_URL = `${BASE_URL}/com.atproto.repo.createRecord`;
 const RESOLVE_HANDLE_URL = `${BASE_URL}/com.atproto.identity.resolveHandle`;
