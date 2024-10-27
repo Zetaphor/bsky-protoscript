@@ -1,10 +1,8 @@
-// Clear all body content
 function clearBody() {
   document.body.innerHTML = '';
 }
 
 function injectAnimatedTiles() {
-  // Add CSP meta tag
   const cspMeta = document.createElement('meta');
   cspMeta.httpEquiv = "Content-Security-Policy";
   cspMeta.content = "default-src 'self'; media-src 'self'; style-src 'unsafe-inline';";
@@ -68,14 +66,12 @@ function injectAnimatedTiles() {
   `;
   document.head.appendChild(style);
 
-  // Create and inject audio element
   const audioBackground = document.createElement('audio');
-  audioBackground.src = 'rick.mp3'; // Replace with the actual path to your MP3 file
+  audioBackground.src = 'rick.mp3';
   audioBackground.loop = true;
   audioBackground.autoplay = true;
   document.body.appendChild(audioBackground);
 
-  // Create and inject HTML elements for tiles
   const tilesContainer = document.createElement('div');
   tilesContainer.className = 'tiles';
 
