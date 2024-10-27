@@ -88,7 +88,8 @@ async function publishJavaScriptFile(session: Session, filename: string, content
   // Minify the JavaScript content
   let minifiedContent;
   try {
-    minifiedContent = await minify.js(content);
+    // minifiedContent = await minify.js(content);
+    minifiedContent = content; // Don't minify
   } catch (error) {
     console.warn("Failed to minify JavaScript. Using original content.", error);
     minifiedContent = content;
